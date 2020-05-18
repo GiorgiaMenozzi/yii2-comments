@@ -51,5 +51,6 @@ return [
     'Active' => 'Attivo',
     'Deleted' => 'Eliminato',
     'Go Back' => 'Torna indietro',
+    'Archived'=> 'Archiviato'
 ];
 

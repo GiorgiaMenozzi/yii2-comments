@@ -50,6 +50,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'filter' => Status::listData(),
                 'filterInputOptions' => ['prompt' => Yii::t('yii2mod.comments', 'Select Status'), 'class' => 'form-control'],
             ],
+            'archived:boolean',
             [
                 'attribute' => 'createdAt',
                 'value' => function ($model) {

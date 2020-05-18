@@ -31,6 +31,7 @@ use yii2mod\moderation\ModerationQuery;
  * @property int $status
  * @property int $createdAt
  * @property int $updatedAt
+ * @property int $archived
  *
  * @method ActiveRecord makeRoot()
  * @method ActiveRecord appendTo($node)
@@ -70,6 +71,7 @@ class CommentModel extends ActiveRecord
             ['status', 'in', 'range' => Status::getConstantsByName()],
             ['level', 'default', 'value' => 1],
             ['parentId', 'validateParentID', 'except' => static::SCENARIO_MODERATION],
+            ['archived', 'default', 'value' => 0],
             [['entityId', 'parentId', 'status', 'level'], 'integer'],
         ];
     }
@@ -153,6 +155,7 @@ class CommentModel extends ActiveRecord
             'url' => Yii::t('yii2mod.comments', 'Url'),
             'createdAt' => Yii::t('yii2mod.comments', 'Created date'),
             'updatedAt' => Yii::t('yii2mod.comments', 'Updated date'),
+            'archived' => Yii::t('yii2mod.comments', 'Archived'),
         ];
     }
 
@@ -232,7 +235,7 @@ class CommentModel extends ActiveRecord
      *
      * @return array|ActiveRecord[]
      */
-    public static function getTree($entity, $entityId, $maxLevel = null)
+    public static function getTree($entity, $entityId, $maxLevel = null, $archived=0)
     {
         $query = static::find()
             ->alias('c')
@@ -240,6 +243,7 @@ class CommentModel extends ActiveRecord
             ->andWhere([
                 'c.entityId' => $entityId,
                 'c.entity' => $entity,
+                'c.archived'=>$archived,
             ])
             ->orderBy(['c.parentId' => SORT_ASC, 'c.createdAt' => SORT_ASC])
             ->with(['author']);
@@ -372,7 +376,7 @@ class CommentModel extends ActiveRecord
     {
         return (int) static::find()
             ->approved()
-            ->andWhere(['entity' => $this->entity, 'entityId' => $this->entityId])
+            ->andWhere(['entity' => $this->entity, 'entityId' => $this->entityId,'archived'=>$this->archived])
             ->count();
     }
 

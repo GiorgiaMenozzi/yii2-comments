@@ -29,6 +29,7 @@ $this->params['breadcrumbs'][] = Yii::t('yii2mod.comments', 'Update');
         ]);
         ?>
         <?php echo $form->field($model, 'status')->dropDownList(Status::listData()); ?>
+        <?php echo $form->field($model, 'archived')->checkbox(); ?>
         <div class="form-group">
             <?php echo Html::submitButton(Yii::t('yii2mod.comments', 'Update'), ['class' => 'btn btn-primary']); ?>
             <?php echo Html::a(Yii::t('yii2mod.comments', 'Go Back'), ['index'], ['class' => 'btn btn-default']); ?>

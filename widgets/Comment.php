@@ -10,6 +10,7 @@ use yii\helpers\Json;
 use yii2mod\comments\CommentAsset;
 use yii2mod\comments\models\CommentModel;
 use yii2mod\comments\traits\ModuleTrait;
+use yii\helpers\ArrayHelper;
 
 /**
  * Class Comment
@@ -55,6 +56,8 @@ class Comment extends Widget
      * @var string entity id attribute
      */
     public $entityIdAttribute = 'id';
+    
+    public $archived = 0;
 
     /**
      * @var array DataProvider config
@@ -141,8 +144,9 @@ class Comment extends Widget
             'class' => $commentClass,
             'entity' => $this->entity,
             'entityId' => $this->entityId,
+            'archived' => $this->archived,
         ]);
-        $commentDataProvider = $this->getCommentDataProvider($commentClass);
+        $commentDataProvider = $this->getCommentDataProvider($commentClass, $this->archived);
 
         return $this->render($this->commentView, [
             'commentDataProvider' => $commentDataProvider,
@@ -202,7 +206,7 @@ class Comment extends Widget
     {
         $dataProvider = new ArrayDataProvider($this->dataProviderConfig);
         if (!isset($this->dataProviderConfig['allModels'])) {
-            $dataProvider->allModels = $commentClass::getTree($this->entity, $this->entityId, $this->maxLevel);
+            $dataProvider->allModels = $commentClass::getTree($this->entity, $this->entityId, $this->maxLevel, $this->archived);
         }
 
         return $dataProvider;
