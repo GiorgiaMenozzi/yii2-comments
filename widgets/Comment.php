@@ -35,7 +35,7 @@ class Comment extends Widget
     /**
      * @var string the view file that will render the comment tree and form for posting comments
      */
-    public $commentView = '@vendor/yii2mod/yii2-comments/widgets/views/index';
+    public $commentView = '@vendor/yii2mod/yii2-comments/widgets/views/index_expand';
 
     /**
      * @var string comment form id
@@ -57,6 +57,10 @@ class Comment extends Widget
      */
     public $entityIdAttribute = 'id';
     
+    /**
+     * default view, see all the comments with archived attribute set to 0 (default value)
+     * @var integer 
+     */
     public $archived = 0;
 
     /**

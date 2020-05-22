@@ -51,6 +51,12 @@ return [
     'Active' => 'Attivo',
     'Deleted' => 'Eliminato',
     'Go Back' => 'Torna indietro',
-    'Archived'=> 'Archiviato'
+    'Archived'=> 'Archiviato',
+    'Archive'=> 'Archivia',
+    'Restore'=> 'Ripristina',
+    'Update' => 'Modifica',
+    'Comment archiving status has changed!'=>'Lo stato di archiviazione del commento è cambiato!',
+    'Comment archiving status has not changed. Please try again!' => 'Lo stato di archiviazione del commento non è cambiato, tenta ancora!',
+    'Show replies ({0})'=> 'Visualizza risposte ({0})'
 ];
 

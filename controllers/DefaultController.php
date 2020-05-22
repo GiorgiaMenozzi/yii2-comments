@@ -120,6 +120,21 @@ class DefaultController extends Controller
             'errors' => ActiveForm::validate($commentModel),
         ];
     }
+    
+    /**
+     * Change the archived attribute 
+     *
+     * @param int $id Comment ID
+     *
+     * @return string Comment text
+     */
+    public function actionChangeArchived($id)
+    {
+        $commentModel = $this->findModel($id);
+        $commentModel->archived==1 ? $commentModel->archived=0 :  $commentModel->archived=1;
+        return $commentModel->save();
+    }
+    
 
     /**
      * Delete comment.

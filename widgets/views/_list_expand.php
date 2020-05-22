@@ -3,12 +3,20 @@
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii2mod\editable\Editable;
+use yii2mod\comments\models\CommentModel;
 
 /* @var $this \yii\web\View */
 /* @var $model \yii2mod\comments\models\CommentModel */
 /* @var $maxLevel null|integer comments max level */
 ?>
-<li class="comment" id="comment-<?php echo $model->id; ?>">
+<li class="comment" id="comment-<?php echo $model->id; ?>"  >
+    <?php if ( $model->level==1 ){
+        $ids = [];
+        $ids = CommentModel::recursiveArchive($model->id,$ids);
+        echo Yii::t('yii2mod.comments', 'Show replies ({0})', count($ids));
+        echo '<botton data-toggle="collapse" data-target="#children-'.$model->id.'"><span class="glyphicon glyphicon-chevron-right"></span></botton>';
+    }
+    ?>
     <div class="comment-content" data-comment-content-id="<?php echo $model->id; ?>">
         <div class="comment-author-avatar">
             <?php echo Html::img($model->getAvatar(), ['alt' => $model->getAuthorName()]); ?>
@@ -74,8 +82,9 @@ use yii2mod\editable\Editable;
         </div>
     </div>
 </li>
+
 <?php if ($model->hasChildren()) : ?>
-    <ul class="children">
+    <ul class="children collapse" id="children-<?php echo $model->id; ?>">
         <?php foreach ($model->getChildren() as $children) : ?>
             <?php echo $this->render('_list', ['model' => $children, 'maxLevel' => $maxLevel]); ?>
         <?php endforeach; ?>

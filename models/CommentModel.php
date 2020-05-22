@@ -39,8 +39,8 @@ use yii2mod\moderation\ModerationQuery;
  * @method ModerationBehavior markRejected()
  * @method AdjacencyListBehavior deleteWithChildren()
  */
-class CommentModel extends ActiveRecord
-{
+class CommentModel extends ActiveRecord {
+
     use ModuleTrait;
 
     const SCENARIO_MODERATION = 'moderation';
@@ -53,16 +53,14 @@ class CommentModel extends ActiveRecord
     /**
      * @inheritdoc
      */
-    public static function tableName()
-    {
+    public static function tableName() {
         return '{{%comment}}';
     }
 
     /**
      * @inheritdoc
      */
-    public function rules()
-    {
+    public function rules() {
         return [
             [['entity', 'entityId'], 'required'],
             ['content', 'required', 'message' => Yii::t('yii2mod.comments', 'Comment cannot be blank.')],
@@ -79,17 +77,16 @@ class CommentModel extends ActiveRecord
     /**
      * @param $attribute
      */
-    public function validateParentID($attribute)
-    {
+    public function validateParentID($attribute) {
         if (null !== $this->{$attribute}) {
             $parentCommentExist = static::find()
-                ->approved()
-                ->andWhere([
-                    'id' => $this->{$attribute},
-                    'entity' => $this->entity,
-                    'entityId' => $this->entityId,
-                ])
-                ->exists();
+                    ->approved()
+                    ->andWhere([
+                        'id' => $this->{$attribute},
+                        'entity' => $this->entity,
+                        'entityId' => $this->entityId,
+                    ])
+                    ->exists();
 
             if (!$parentCommentExist) {
                 $this->addError('content', Yii::t('yii2mod.comments', 'Oops, something went wrong. Please try again later.'));
@@ -100,8 +97,7 @@ class CommentModel extends ActiveRecord
     /**
      * @inheritdoc
      */
-    public function behaviors()
-    {
+    public function behaviors() {
         return [
             'blameable' => [
                 'class' => BlameableBehavior::class,
@@ -139,8 +135,7 @@ class CommentModel extends ActiveRecord
     /**
      * @inheritdoc
      */
-    public function attributeLabels()
-    {
+    public function attributeLabels() {
         return [
             'id' => Yii::t('yii2mod.comments', 'ID'),
             'content' => Yii::t('yii2mod.comments', 'Content'),
@@ -162,16 +157,14 @@ class CommentModel extends ActiveRecord
     /**
      * @return ModerationQuery
      */
-    public static function find()
-    {
+    public static function find() {
         return new ModerationQuery(get_called_class());
     }
 
     /**
      * @inheritdoc
      */
-    public function beforeSave($insert)
-    {
+    public function beforeSave($insert) {
         if (parent::beforeSave($insert)) {
             if ($this->parentId > 0 && $this->isNewRecord) {
                 $parentNodeLevel = static::find()->select('level')->where(['id' => $this->parentId])->scalar();
@@ -184,11 +177,31 @@ class CommentModel extends ActiveRecord
         }
     }
 
+    static public function recursiveArchive($idnode, &$ids) {
+       
+        $query = static::find()
+                ->approved()
+                ->andWhere([
+                    'parentId' => $idnode,
+                ])
+                ->orderBy(['createdAt' => SORT_ASC])
+                ->with(['author']);
+        if ($query->count()>0) {
+            $new_nodes = ArrayHelper::getColumn($query->all(), "id");
+            //echo "<br />recursiveArchive " . implode(", ",$new_nodes) . " query: " . $query->createCommand()->getRawSql();
+            
+            $ids = array_merge($ids, $new_nodes);
+            //echo "ids :".implode(", ",$ids);
+            $ids = self::recursiveArchive($new_nodes, $ids);
+            
+        }
+        return array_unique($ids);
+    }
+
     /**
      * @inheritdoc
      */
-    public function afterSave($insert, $changedAttributes)
-    {
+    public function afterSave($insert, $changedAttributes) {
         parent::afterSave($insert, $changedAttributes);
 
         if (!$insert) {
@@ -196,13 +209,20 @@ class CommentModel extends ActiveRecord
                 $this->beforeModeration();
             }
         }
+
+        // when changing the attribute archived, also all the comments in the tree 
+        // must be changed
+        if (array_key_exists('archived', $changedAttributes)) {
+            $ids = [];
+            $ids = self::recursiveArchive($this->id,$ids);
+            static::updateAll(['archived' => $this->archived], ['id' => $ids]);
+        }
     }
 
     /**
      * @return bool
      */
-    public function saveComment()
-    {
+    public function saveComment() {
         if ($this->validate()) {
             if (empty($this->parentId)) {
                 return $this->makeRoot()->save();
@@ -221,8 +241,7 @@ class CommentModel extends ActiveRecord
      *
      * @return \yii\db\ActiveQuery
      */
-    public function getAuthor()
-    {
+    public function getAuthor() {
         return $this->hasOne($this->getModule()->userIdentityClass, ['id' => 'createdBy']);
     }
 
@@ -235,18 +254,17 @@ class CommentModel extends ActiveRecord
      *
      * @return array|ActiveRecord[]
      */
-    public static function getTree($entity, $entityId, $maxLevel = null, $archived=0)
-    {
+    public static function getTree($entity, $entityId, $maxLevel = null, $archived = 0) {
         $query = static::find()
-            ->alias('c')
-            ->approved()
-            ->andWhere([
-                'c.entityId' => $entityId,
-                'c.entity' => $entity,
-                'c.archived'=>$archived,
-            ])
-            ->orderBy(['c.parentId' => SORT_ASC, 'c.createdAt' => SORT_ASC])
-            ->with(['author']);
+                ->alias('c')
+                ->approved()
+                ->andWhere([
+                    'c.entityId' => $entityId,
+                    'c.entity' => $entity,
+                    'c.archived' => $archived,
+                ])
+                ->orderBy(['c.parentId' => SORT_ASC, 'c.createdAt' => SORT_ASC])
+                ->with(['author']);
 
         if ($maxLevel > 0) {
             $query->andWhere(['<=', 'c.level', $maxLevel]);
@@ -269,8 +287,7 @@ class CommentModel extends ActiveRecord
      *
      * @return array|ActiveRecord[]
      */
-    protected static function buildTree(&$data, $rootID = 0)
-    {
+    protected static function buildTree(&$data, $rootID = 0) {
         $tree = [];
 
         foreach ($data as $id => $node) {
@@ -287,40 +304,39 @@ class CommentModel extends ActiveRecord
     /**
      * @return array|null|ActiveRecord[]
      */
-    public function getChildren()
-    {
+    public function getChildren() {
         return $this->children;
     }
 
     /**
      * @param $value
      */
-    public function setChildren($value)
-    {
+    public function setChildren($value) {
         $this->children = $value;
     }
 
     /**
      * @return bool
      */
-    public function hasChildren()
-    {
+    public function hasChildren() {
         return !empty($this->children);
+    }
+
+    public function addReply($maxLevel) {
+        return ($this->level < $maxLevel || is_null($maxLevel)) && $this->archived == 0;
     }
 
     /**
      * @return string
      */
-    public function getPostedDate()
-    {
+    public function getPostedDate() {
         return Yii::$app->formatter->asRelativeTime($this->createdAt);
     }
 
     /**
      * @return mixed
      */
-    public function getAuthorName()
-    {
+    public function getAuthorName() {
         if ($this->author->hasMethod('getUsername')) {
             return $this->author->getUsername();
         }
@@ -331,8 +347,7 @@ class CommentModel extends ActiveRecord
     /**
      * @return string
      */
-    public function getContent()
-    {
+    public function getContent() {
         return nl2br($this->content);
     }
 
@@ -341,8 +356,7 @@ class CommentModel extends ActiveRecord
      *
      * @return string
      */
-    public function getAvatar()
-    {
+    public function getAvatar() {
         if ($this->author->hasMethod('getAvatar')) {
             return $this->author->getAvatar();
         }
@@ -355,16 +369,15 @@ class CommentModel extends ActiveRecord
      *
      * @return array
      */
-    public static function getAuthors()
-    {
+    public static function getAuthors() {
         $query = static::find()
-            ->alias('c')
-            ->select(['c.createdBy', 'a.username'])
-            ->joinWith('author a')
-            ->groupBy(['c.createdBy', 'a.username'])
-            ->orderBy('a.username')
-            ->asArray()
-            ->all();
+                ->alias('c')
+                ->select(['c.createdBy', 'a.username'])
+                ->joinWith('author a')
+                ->groupBy(['c.createdBy', 'a.username'])
+                ->orderBy('a.username')
+                ->asArray()
+                ->all();
 
         return ArrayHelper::map($query, 'createdBy', 'author.username');
     }
@@ -372,27 +385,24 @@ class CommentModel extends ActiveRecord
     /**
      * @return int
      */
-    public function getCommentsCount()
-    {
+    public function getCommentsCount() {
         return (int) static::find()
-            ->approved()
-            ->andWhere(['entity' => $this->entity, 'entityId' => $this->entityId,'archived'=>$this->archived])
-            ->count();
+                        ->approved()
+                        ->andWhere(['entity' => $this->entity, 'entityId' => $this->entityId, 'archived' => $this->archived])
+                        ->count();
     }
 
     /**
      * @return string
      */
-    public function getAnchorUrl()
-    {
+    public function getAnchorUrl() {
         return "#comment-{$this->id}";
     }
 
     /**
      * @return null|string
      */
-    public function getViewUrl()
-    {
+    public function getViewUrl() {
         if (!empty($this->url)) {
             return $this->url . $this->getAnchorUrl();
         }
@@ -405,8 +415,7 @@ class CommentModel extends ActiveRecord
      *
      * @return bool
      */
-    public function beforeModeration()
-    {
+    public function beforeModeration() {
         $descendantIds = ArrayHelper::getColumn($this->getDescendants()->asArray()->all(), 'id');
 
         if (!empty($descendantIds)) {
@@ -415,4 +424,5 @@ class CommentModel extends ActiveRecord
 
         return true;
     }
+
 }

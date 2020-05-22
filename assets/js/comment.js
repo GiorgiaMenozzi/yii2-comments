@@ -111,6 +111,7 @@
                 $comment.on('click.comment', '[data-action="reply"]', eventParams, reply);
                 $comment.on('click.comment', '[data-action="cancel-reply"]', eventParams, cancelReply);
                 $comment.on('click.comment', '[data-action="delete"]', eventParams, deleteComment);
+                $comment.on('click.comment', '[data-action="archive"]', eventParams, archive);
             });
         },
         data: function () {
@@ -188,6 +189,28 @@
 
         return false;
     }
+    
+    /**
+     * Archive comment
+     *
+     * @param params
+     */
+    function archive(params) {
+
+        $.ajax({
+            url: $(this).data('url'),
+        
+            success: function(data) {
+                alert('Archived state changed');
+            },
+            error: function() {
+                alert('Error occured');
+            }
+        });
+        $("comment-" + $(this).data('comment-id')).hide();
+    }
+    
+    
 
     /**
      * Cancel reply
@@ -246,5 +269,5 @@
     function getCurrentUrl() {
         return window.location.pathname + window.location.search;
     }
-
+    
 })(window.jQuery);

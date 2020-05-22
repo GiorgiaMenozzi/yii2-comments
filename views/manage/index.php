@@ -50,7 +50,11 @@ $this->params['breadcrumbs'][] = $this->title;
                 'filter' => Status::listData(),
                 'filterInputOptions' => ['prompt' => Yii::t('yii2mod.comments', 'Select Status'), 'class' => 'form-control'],
             ],
-            'archived:boolean',
+            [
+                'attribute' =>'archived',
+                'format' => "boolean",
+                'visible' => Yii::$app->getModule('comment')->add_archive_action,
+            ],
             [
                 'attribute' => 'createdAt',
                 'value' => function ($model) {
@@ -61,7 +65,7 @@ $this->params['breadcrumbs'][] = $this->title;
             [
                 'header' => 'Actions',
                 'class' => 'yii\grid\ActionColumn',
-                'template' => '{view}{update}{delete}',
+                'template' => '{update}{delete}',
                 'buttons' => [
                     'view' => function ($url, $model, $key) {
                         $title = Yii::t('yii2mod.comments', 'View');

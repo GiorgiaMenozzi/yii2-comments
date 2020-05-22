@@ -29,7 +29,16 @@ class Module extends \yii\base\Module
     /**
      * @var bool when admin can edit comments on frontend
      */
-    public $enableInlineEdit = false;
+    public $enableInlineEdit = FALSE;
+    
+    
+    /**
+     *
+     * @var boolean, set TRUE if you use the archived attribute
+     */
+    public $add_archive_action = TRUE;
+    
+    public $admin_permission = "admin";
 
     /**
      * {@inheritdoc}
