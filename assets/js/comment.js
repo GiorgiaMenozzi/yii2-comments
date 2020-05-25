@@ -202,12 +202,14 @@
         
             success: function(data) {
                 alert('Archived state changed');
+                var settings = commentData[params.data.wrapperSelector].settings;
+                var pjaxSettings = $.extend({container: settings.pjaxContainerId}, settings.pjaxSettings);
+                $.pjax(pjaxSettings);
             },
             error: function() {
                 alert('Error occured');
             }
         });
-        $("comment-" + $(this).data('comment-id')).hide();
     }
     
     
